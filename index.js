@@ -67,6 +67,8 @@ app.get('/items/:ItemID', (req, res) => {
  * @returns JSON object holding user data
  */
 app.post('/users', (req, res) => {
+  // Hash password before storing it in the database
+  let hashedPassword = Users.hashPassword(req.body.Password);
   Users.findOne({ Username: req.body.Username })
     .then((user) => {
       if (user) {
@@ -74,7 +76,7 @@ app.post('/users', (req, res) => {
       } else {
         Users.create({
           Username: req.body.Username,
-          Password: req.body.Password,
+          Password: hashedPassword,
           Email: req.body.Email,
           Birthday: req.body.Birthday,
         })
