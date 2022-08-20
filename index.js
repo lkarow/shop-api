@@ -13,10 +13,16 @@ const Models = require('./model.js');
 const Items = Models.Item;
 const Users = Models.User;
 
-mongoose.connect('mongodb://localhost:27017/shoeShopDB', {
+mongoose.connect(process.env.CONNECTION_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+// Mongoose connect locally
+// mongoose.connect('mongodb://localhost:27017/shoeShopDB', {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
 
 let auth = require('./auth')(app);
 const passport = require('passport');
@@ -281,6 +287,5 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
-app.listen(8080, () => {
-  console.log('Server is listening on port 8080.');
-});
+const port = process.env.PORT || 8080;
+app.listen(port, () => console.log(`Server is listening on port ${port}.`));
