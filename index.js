@@ -22,6 +22,9 @@ let auth = require('./auth')(app);
 const passport = require('passport');
 require('./passport');
 
+// express-validator
+const { body, validationResult } = require('express-validator');
+
 app.get('/', (req, res) => {
   res.send('Welcome to the store.');
 });
@@ -66,32 +69,54 @@ app.get('/items/:ItemID', (req, res) => {
  * HTTP method: POST
  * @returns JSON object holding user data
  */
-app.post('/users', (req, res) => {
-  // Hash password before storing it in the database
-  let hashedPassword = Users.hashPassword(req.body.Password);
-  Users.findOne({ Username: req.body.Username })
-    .then((user) => {
-      if (user) {
-        return res.status(400).send(`${req.body.Username} already exists`);
-      } else {
-        Users.create({
-          Username: req.body.Username,
-          Password: hashedPassword,
-          Email: req.body.Email,
-          Birthday: req.body.Birthday,
-        })
-          .then((user) => res.status(201).json(user))
-          .catch((error) => {
-            console.error(error);
-            res.status(500).send(`Error: ${error}`);
-          });
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).send(`Error: ${error}`);
-    });
-});
+app.post(
+  '/users',
+  // Validation
+  body(
+    'Username',
+    'The username is required and must be at least 3 characters long'
+  ).isLength({ min: 3 }),
+  body(
+    'Username',
+    'Usernames may only contain alphanumeric characters'
+  ).isAlphanumeric(),
+  body(
+    'Password',
+    'Password is required and must be at least 4 characters long'
+  ).isLength({ min: 4 }),
+  body('Email', 'Email is required').isEmail(),
+  (req, res) => {
+    // Check Validation object for errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // Hash password before storing it in the database
+    let hashedPassword = Users.hashPassword(req.body.Password);
+    Users.findOne({ Username: req.body.Username })
+      .then((user) => {
+        if (user) {
+          return res.status(400).send(`${req.body.Username} already exists`);
+        } else {
+          Users.create({
+            Username: req.body.Username,
+            Password: hashedPassword,
+            Email: req.body.Email,
+            Birthday: req.body.Birthday,
+          })
+            .then((user) => res.status(201).json(user))
+            .catch((error) => {
+              console.error(error);
+              res.status(500).send(`Error: ${error}`);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send(`Error: ${error}`);
+      });
+  }
+);
 
 /**
  * Get data of a user
@@ -124,13 +149,34 @@ app.put(
   '/users/:Username',
   // Authenticate user for this endpoint
   passport.authenticate('jwt', { session: false }),
+  // Validation
+  body(
+    'Username',
+    'The username is required and must be at least 3 characters long'
+  ).isLength({ min: 3 }),
+  body(
+    'Username',
+    'Usernames may only contain alphanumeric characters'
+  ).isAlphanumeric(),
+  body(
+    'Password',
+    'Password is required and must be at least 4 characters long'
+  ).isLength({ min: 4 }),
+  body('Email', 'Email is required').isEmail(),
   (req, res) => {
+    // Check Validation object for errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // Hash password before storing it in the database
+    let hashedPassword = Users.hashPassword(req.body.Password);
     Users.findOneAndUpdate(
       { Username: req.params.Username },
       {
         $set: {
           Username: req.body.Username,
-          Password: req.body.Password,
+          Password: hashedPassword,
           Email: req.body.Email,
           Birthday: req.body.Birthday,
         },
