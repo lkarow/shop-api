@@ -18,6 +18,10 @@ mongoose.connect('mongodb://localhost:27017/shoeShopDB', {
   useUnifiedTopology: true,
 });
 
+let auth = require('./auth')(app);
+const passport = require('passport');
+require('./passport');
+
 app.get('/', (req, res) => {
   res.send('Welcome to the store.');
 });
@@ -93,14 +97,19 @@ app.post('/users', (req, res) => {
  * HTTP method: GET
  * @returns JSON object hodling user data
  */
-app.get('/users/:Username', (req, res) => {
-  Users.findOne({ Username: req.params.Username })
-    .then((user) => res.json(user))
-    .catch((error) => {
-      console.error(error);
-      res.status(500).send(`Error: ${error}`);
-    });
-});
+app.get(
+  '/users/:Username',
+  // Authenticate user for this endpoint
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Users.findOne({ Username: req.params.Username })
+      .then((user) => res.json(user))
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send(`Error: ${error}`);
+      });
+  }
+);
 
 /**
  * Update user data
@@ -109,28 +118,33 @@ app.get('/users/:Username', (req, res) => {
  * Request body: JSON object hodling new user data
  * @returns JSON object holding user data
  */
-app.put('/users/:Username', (req, res) => {
-  Users.findOneAndUpdate(
-    { Username: req.params.Username },
-    {
-      $set: {
-        Username: req.body.Username,
-        Password: req.body.Password,
-        Email: req.body.Email,
-        Birthday: req.body.Birthday,
+app.put(
+  '/users/:Username',
+  // Authenticate user for this endpoint
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Users.findOneAndUpdate(
+      { Username: req.params.Username },
+      {
+        $set: {
+          Username: req.body.Username,
+          Password: req.body.Password,
+          Email: req.body.Email,
+          Birthday: req.body.Birthday,
+        },
       },
-    },
-    { new: true }, // This line makes sure that the updated document is returned
-    (error, updatedUser) => {
-      if (error) {
-        console.error(error);
-        res.status(500).send(`Error: ${error}`);
-      } else {
-        res.json(updatedUser);
+      { new: true }, // This line makes sure that the updated document is returned
+      (error, updatedUser) => {
+        if (error) {
+          console.error(error);
+          res.status(500).send(`Error: ${error}`);
+        } else {
+          res.json(updatedUser);
+        }
       }
-    }
-  );
-});
+    );
+  }
+);
 
 /**
  * Delete user account
@@ -138,17 +152,22 @@ app.put('/users/:Username', (req, res) => {
  * HTTP method: DELETE
  * @returns {string} text message
  */
-app.delete('/users/:Username', (req, res) => {
-  Users.findOneAndRemove({ Username: req.params.Username })
-    .then((user) => {
-      if (!user) res.status(400).send(`${req.params.Username} was not found`);
-      if (user) res.status(200).send(`${req.params.Username} was deleted`);
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).send(`Error: ${error}`);
-    });
-});
+app.delete(
+  '/users/:Username',
+  // Authenticate user for this endpoint
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Users.findOneAndRemove({ Username: req.params.Username })
+      .then((user) => {
+        if (!user) res.status(400).send(`${req.params.Username} was not found`);
+        if (user) res.status(200).send(`${req.params.Username} was deleted`);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send(`Error: ${error}`);
+      });
+  }
+);
 
 /**
  * Add item to cart
@@ -156,23 +175,28 @@ app.delete('/users/:Username', (req, res) => {
  * HTTP method: POST
  * @returns JSON object holding user data
  */
-app.post('/users/:Username/items/:ItemID', (req, res) => {
-  Users.findOneAndUpdate(
-    { Username: req.params.Username },
-    {
-      $push: { Cart: req.params.ItemID },
-    },
-    { new: true }, // This line makes sure that the updated document is returned
-    (error, updatedUser) => {
-      if (error) {
-        console.error(error);
-        res.status(500).send(`Error: ${error}`);
-      } else {
-        res.json(updatedUser);
+app.post(
+  '/users/:Username/items/:ItemID',
+  // Authenticate user for this endpoint
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Users.findOneAndUpdate(
+      { Username: req.params.Username },
+      {
+        $push: { Cart: req.params.ItemID },
+      },
+      { new: true }, // This line makes sure that the updated document is returned
+      (error, updatedUser) => {
+        if (error) {
+          console.error(error);
+          res.status(500).send(`Error: ${error}`);
+        } else {
+          res.json(updatedUser);
+        }
       }
-    }
-  );
-});
+    );
+  }
+);
 
 /**
  * Delete item from cart
@@ -180,21 +204,26 @@ app.post('/users/:Username/items/:ItemID', (req, res) => {
  * HTTP method: delete
  * @returns JSON object holding user data
  */
-app.delete('/users/:Username/items/:ItemID', (req, res) => {
-  Users.findOneAndUpdate(
-    { Username: req.params.Username },
-    { $pull: { Cart: req.params.ItemID } },
-    { new: true }, // This line makes sure that the updated document is returned
-    (error, updatedUser) => {
-      if (error) {
-        console.error(error);
-        res.status(500).send(`Error: ${error}`);
-      } else {
-        res.json(updatedUser);
+app.delete(
+  '/users/:Username/items/:ItemID',
+  // Authenticate user for this endpoint
+  passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    Users.findOneAndUpdate(
+      { Username: req.params.Username },
+      { $pull: { Cart: req.params.ItemID } },
+      { new: true }, // This line makes sure that the updated document is returned
+      (error, updatedUser) => {
+        if (error) {
+          console.error(error);
+          res.status(500).send(`Error: ${error}`);
+        } else {
+          res.json(updatedUser);
+        }
       }
-    }
-  );
-});
+    );
+  }
+);
 
 app.use(express.static('public'));
 
