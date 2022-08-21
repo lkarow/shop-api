@@ -32,19 +32,19 @@ require('./passport');
 const { body, validationResult } = require('express-validator');
 
 // CORS
-// const cors = require('cors');
-// let whitelist = ['http://localhost:3000'];
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       if (whitelist.indexOf(origin) !== -1) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error('Not allowed by CORS'));
-//       }
-//     },
-//   })
-// );
+const cors = require('cors');
+let whitelist = ['http://localhost:3000', 'http://localhost:1234'];
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (whitelist.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+  })
+);
 
 app.get('/', (req, res) => {
   res.send('Welcome to the store.');
