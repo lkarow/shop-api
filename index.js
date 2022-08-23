@@ -24,10 +24,6 @@ mongoose.connect(process.env.CONNECTION_URI, {
 //   useUnifiedTopology: true,
 // });
 
-let auth = require('./auth')(app);
-const passport = require('passport');
-require('./passport');
-
 // express-validator
 const { body, validationResult } = require('express-validator');
 
@@ -45,6 +41,10 @@ app.use(
     },
   })
 );
+
+let auth = require('./auth')(app);
+const passport = require('passport');
+require('./passport');
 
 app.get('/', (req, res) => {
   res.send('Welcome to the store.');
