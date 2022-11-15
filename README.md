@@ -8,7 +8,7 @@ HTTP authentication is used to authenticate users when they log in to the applic
 
 ## Dependencies
 
-- [bcrypt](https://github.com/kelektiv/node.bcrypt.js)
+- [bcryptjs](https://github.com/dcodeIO/bcrypt.js)
 - [body-parser](https://github.com/expressjs/body-parser)
 - [CORS](https://github.com/expressjs/cors)
 - [Express](https://github.com/expressjs/express)
